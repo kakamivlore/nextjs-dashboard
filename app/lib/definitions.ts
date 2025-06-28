@@ -86,3 +86,25 @@ export type InvoiceForm = {
   amount: number;
   status: 'pending' | 'paid';
 };
+
+
+/* PROJECTS SECTION */
+export type ProjectsCards = {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  //customer_id: string;
+  updated_at: string;
+  created_at: string;
+  //status: 'in progress' | 'done';
+};
+
+export type ProjectForm = {
+  id: string;
+  title: string;
+  description: string;
+  customer_id: string;
+  image_urls: string[];
+};
+

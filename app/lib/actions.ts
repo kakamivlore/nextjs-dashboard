@@ -24,6 +24,23 @@ const FormSchema = z.object({
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 const UpdateInvoice = FormSchema.omit({ id: true, date: true });
 
+const FormSchemaProject = z.object({
+  id: z.string(),
+  customerId: z.string({
+    invalid_type_error: 'Please select a customer.',
+  }),
+  title: z.string({
+    invalid_type_error: 'Please select a customer.',
+  }),
+  description: z.string({
+    invalid_type_error: 'Please select a customer.',
+  }),
+  date: z.string(),
+});
+
+const CreateProject = FormSchemaProject.omit({ id: true, date: true });
+const UpdateProject = FormSchemaProject.omit({ id: true, date: true });
+
 export type State = {
   errors?: {
     customerId?: string[];
@@ -96,8 +113,10 @@ export async function updateInvoice(id: string, prevState: State, formData: Form
     WHERE id = ${id}
   `;
   } catch (error) {
-    return { message: `Database Error: Failed to Update Invoice.
-                      ${error}` };
+    return {
+      message: `Database Error: Failed to Update Invoice.
+                      ${error}`
+    };
   }
 
   revalidatePath('/dashboard/invoices');
@@ -126,4 +145,105 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+
+/* PROJECT SECTION */
+export type ProjectState = {
+  errors?: {
+    customerId?: string[];
+    title?: string[];
+    description?: string[];
+  };
+  message?: string | null;
+};
+
+export async function createProject(prevState: ProjectState, formData: FormData) {
+  const validatedFields = CreateProject.safeParse({
+    customerId: formData.get('customerId'),
+    title: formData.get('title'),
+    description: formData.get('description'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Create Project.',
+    };
+  }
+
+  const { customerId, title, description } = validatedFields.data;
+  const imageUrls = formData.getAll('images') as string[]; // Get all image URLs
+  const updatedAt = new Date().toISOString().split('T')[0];
+
+  try {
+    const result = await sql`
+    INSERT INTO projects (customer_id, title, description, created_at, updated_at, image_url)
+    VALUES (${customerId}, ${title}, ${description}, ${updatedAt}, ${updatedAt}, ${imageUrls[0]})
+    RETURNING id;
+    `;
+
+    const projectId = result[0].id;
+    // If there are image URLs, insert them into the project_images table
+    if (imageUrls.length > 0 && projectId) {
+      console.log("im in")
+      const imageInsertPromises = imageUrls.map(url =>
+        sql`
+          INSERT INTO project_images (project_id, image_url)
+          VALUES (${projectId}, ${url});
+        `
+      );
+      console.log(imageInsertPromises);
+      await Promise.all(imageInsertPromises);
+    }
+
+  } catch (error) {
+    return {
+      message: `Database Error: Failed to Create Project.
+                ${error}`,
+    };
+  }
+
+  revalidatePath('/dashboard/projects');
+  redirect('/dashboard/projects');
+}
+
+export async function updateProject(id: string, prevState: State, formData: FormData) {
+  const validatedFields = CreateInvoice.safeParse({
+    title: formData.get('title'),
+    description: formData.get('description'),
+    customerId: formData.get('customer_id'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Missing Fields. Failed to Update Project.',
+    };
+  }
+
+  const { customerId, title, description } = UpdateProject.parse({
+    title: formData.get('title'),
+    description: formData.get('description'),
+    customerId: formData.get('customer_id'),
+  });
+
+
+  /*
+  try {
+    await sql`
+    UPDATE projects
+    SET customer_id = ${customerId}, amount = ${amountInCents}, status = ${status}
+    WHERE id = ${id}
+  `;
+  } catch (error) {
+    return {
+      message: `Database Error: Failed to Update Invoice.
+                      ${error}`
+    };
+  }
+    */
+
+  revalidatePath('/dashboard/projects');
+  redirect('/dashboard/projects');
 }

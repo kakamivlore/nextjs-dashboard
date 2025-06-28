@@ -6,7 +6,12 @@ import LatestInvoices from '@/app/ui/dashboard/latest-invoices';
 import { LatestInvoicesSkeleton, RevenueChartSkeleton, CardsSkeleton } from '@/app/ui/skeletons';
 import CardWrapper from '@/app/ui/dashboard/cards';
 
+// Import your data fetching function
+import { fetchRevenue } from '@/app/lib/data';
+
 export default async function Page() {
+  // Fetch the revenue data directly in this Server Component
+  const revenue = await fetchRevenue();
 
   return (
     <main>
@@ -20,7 +25,8 @@ export default async function Page() {
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-4 lg:grid-cols-8">
         <Suspense fallback={<RevenueChartSkeleton />}>
-          <RevenueChart />
+          {/* Pass the fetched revenue data as a prop to RevenueChart */}
+          <RevenueChart revenue={revenue} />
         </Suspense>
         <Suspense fallback={<LatestInvoicesSkeleton />}>
           <LatestInvoices />

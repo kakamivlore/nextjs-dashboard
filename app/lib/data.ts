@@ -5,6 +5,8 @@ import {
   InvoiceForm,
   InvoicesTable,
   LatestInvoiceRaw,
+  ProjectForm,
+  ProjectsCards,
   Revenue,
 } from './definitions';
 import { formatCurrency } from './utils';
@@ -216,5 +218,66 @@ export async function fetchFilteredCustomers(query: string) {
   } catch (err) {
     console.error('Database Error:', err);
     throw new Error('Failed to fetch customer table.');
+  }
+}
+
+
+
+/* PROJECTS SECTION */
+
+export async function fetchFilteredProjects(
+  query: string,
+  currentPage: number,
+) {
+  const offset = (currentPage - 1) * ITEMS_PER_PAGE;
+
+  try {
+    const projects = await sql<ProjectsCards[]>`
+      SELECT
+        projects.id,
+        projects.title,
+        projects.description,
+        projects.image_url,
+        projects.updated_at
+        
+      FROM projects
+      WHERE
+        projects.title ILIKE ${`%${query}%`} OR
+        projects.description ILIKE ${`%${query}%`} OR
+        projects.updated_at::text ILIKE ${`%${query}%`}
+      ORDER BY projects.created_at DESC
+      LIMIT ${ITEMS_PER_PAGE} OFFSET ${offset}
+    `;
+
+    return projects;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoices.');
+  }
+}
+
+export async function fetchProjectById(id: string) {
+  try {
+    const data = await sql<ProjectForm[]>`
+      SELECT
+        projects.id,
+        projects.title,
+        projects.description,
+        projects.customer_id,
+        ARRAY_AGG(pi.image_url) AS image_urls
+      FROM projects
+      LEFT JOIN project_images pi ON pi.project_id = ${id}
+      WHERE projects.id = ${id}
+      GROUP BY projects.id;
+    `;
+
+    const project = data.map((project) => ({
+      ...project
+    }));
+
+    return project[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch invoice.');
   }
 }
