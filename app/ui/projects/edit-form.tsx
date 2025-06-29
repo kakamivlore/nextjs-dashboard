@@ -1,11 +1,12 @@
 'use client';
 
-import { useActionState, useState } from 'react';
+import { useActionState } from 'react';
 import { CustomerField, ProjectForm } from '@/app/lib/definitions';
-import { UserCircleIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { UserCircleIcon } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { Button } from '@/app/ui/button';
 import { State, updateProject } from '@/app/lib/actions';
+import Image from 'next/image';
 
 export default function EditProjectForm({
   project,
@@ -17,16 +18,6 @@ export default function EditProjectForm({
   const initialState: State = { message: null, errors: {} };
   const updateProjectWithId = updateProject.bind(null, project.id);
   const [state, formAction] = useActionState(updateProjectWithId, initialState);
-
-  const [previewImages, setPreviewImages] = useState<string[]>(project.image_urls || []);
-
-  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = e.target.files;
-    if (files) {
-      const urls = Array.from(files).map((file) => URL.createObjectURL(file));
-      setPreviewImages(urls);
-    }
-  }
 
   return (
     <form action={formAction}>
@@ -123,7 +114,9 @@ export default function EditProjectForm({
                 key={index}
                 className="overflow-hidden rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 bg-white"
               >
-                <img
+                <Image
+                  width={500}
+                  height={300}
                   src={url}
                   alt={`Project Image ${index + 1}`}
                   className="w-full h-48 object-cover"

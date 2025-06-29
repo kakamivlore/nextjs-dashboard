@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { CldUploadWidget } from 'next-cloudinary';
+import type { CloudinaryUploadWidgetResults } from 'next-cloudinary';
 
 interface ImageUploadProps {
   disabled?: boolean;
@@ -22,8 +23,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     setIsMounted(true);
   }, []);
 
-  const handleUpload = (result: any) => {
-    onChange(result.info.secure_url);
+  const handleUpload = (result: CloudinaryUploadWidgetResults) => {
+    if (result.info && typeof result.info === 'object' && 'secure_url' in result.info) {
+      onChange((result.info as { secure_url: string }).secure_url);
+    }
   };
 
   if (!isMounted) return null;

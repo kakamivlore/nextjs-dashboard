@@ -39,7 +39,7 @@ const FormSchemaProject = z.object({
 });
 
 const CreateProject = FormSchemaProject.omit({ id: true, date: true });
-const UpdateProject = FormSchemaProject.omit({ id: true, date: true });
+//const UpdateProject = FormSchemaProject.omit({ id: true, date: true });
 
 export type State = {
   errors?: {
@@ -222,6 +222,7 @@ export async function updateProject(id: string, prevState: State, formData: Form
     };
   }
 
+  /*
   const { customerId, title, description } = UpdateProject.parse({
     title: formData.get('title'),
     description: formData.get('description'),
@@ -229,7 +230,7 @@ export async function updateProject(id: string, prevState: State, formData: Form
   });
 
 
-  /*
+
   try {
     await sql`
     UPDATE projects
